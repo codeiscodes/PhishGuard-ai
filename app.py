@@ -4,6 +4,7 @@ import joblib
 import pandas as pd
 from feature import process_url
 import json
+import os
 
 app = Flask(__name__)
 CORS(app)
@@ -36,4 +37,5 @@ def checkUrl():
     return json.dumps({"prediction":str(prediction[0])})
 
 if __name__ == '__main__':
-    app.run(debug=True, host='127.0.0.1', port=7000)
+    port = int(os.environ.get("PORT", 5000))  # Render assigns a port dynamically
+    app.run(host="0.0.0.0", port=port)
