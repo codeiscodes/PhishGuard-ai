@@ -5,6 +5,7 @@ import pandas as pd
 from feature import process_url
 import json
 import os
+import csv
 
 app = Flask(__name__)
 CORS(app)
@@ -33,8 +34,34 @@ def checkUrl():
         "WebsiteTraffic", "PageRank", "GoogleIndex", "LinksPointingToPage", "StatsReport"
     ]
     input_df = pd.DataFrame([features], columns=feature_names)
+    print(input_df)
     prediction = model.predict(input_df)
+    print(str(prediction[0]))
+    input_df["label"] = prediction[0]
+    input_df["URL"] = data_json
+    file_path = "model_prediction.csv"
+    data = input_df.values.tolist()
+    file_exists = os.path.isfile(file_path)
+    with open(file_path, mode="a", newline="") as file:
+        writer = csv.writer(file)
+        if not file_exists:
+            writer.writerow(input_df.columns)
+        writer.writerows(data)
     return json.dumps({"prediction":str(prediction[0])})
+
+@app.route('/updatePrediction', methods=["POST", "GET"])
+@cross_origin()
+def updatePrediction():
+    try:
+        df = pd.read_csv("model_prediction.csv")
+        if df.empty or "label" not in df.columns:
+            return json.dumps({"status": "false", "error": "CSV is empty or missing 'label' column"})
+        last_index = df.index[-1]  # Get the last row index
+        df.at[last_index, "label"] = "0" if str(df.at[last_index, "label"]) == "1" else "1"
+        df.to_csv("model_prediction.csv", index=False)
+        return json.dumps({"status": "true"})
+    except Exception as e:
+        return json.dumps({"status": "false", "error": str(e)})
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 7000))  # Render assigns a port dynamically
