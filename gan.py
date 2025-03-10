@@ -6,8 +6,6 @@ import tensorflow as tf
 from tensorflow.keras.layers import Input, LSTM, Dense, Embedding
 from tensorflow.keras.models import Model, Sequential
 from tensorflow.keras.optimizers import Adam
-import matplotlib.pyplot as plt
-import seaborn as sns
 
 # Set random seed for reproducibility
 seed = 42
