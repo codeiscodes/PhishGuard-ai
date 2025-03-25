@@ -25,10 +25,14 @@ class FeatureExtraction:
         self.soup = ""
 
         try:
-            self.response = requests.get(url)
-            self.soup = BeautifulSoup(self.response.text, 'html.parser')
-        except:
-            pass
+            self.response = requests.get(url, timeout=5)
+            if self.response.status_code != 200:
+                self.response = None  # Ensure invalid responses are handled
+            else:
+                self.soup = BeautifulSoup(self.response.text, 'html.parser')
+        except requests.RequestException as e:
+            print(f"Error fetching URL {url}: {e}")
+            self.response = None
 
         try:
             self.urlparse = urlparse(url)
@@ -333,7 +337,19 @@ class FeatureExtraction:
             return -1
 
     # 19. WebsiteForwarding
-    def WebsiteForwarding(self):
+    def WebsiteForwarding(self, call=False):
+        if self.response is None:
+            return -1  # Indicating an error or failure to fetch
+
+        if call:
+            print("Here from call")
+            redirect_url = []
+            if self.response.history:
+                for x in self.response.history:
+                    redirect_url.append(x.url)
+            print(redirect_url)
+            return redirect_url
+
         try:
             if len(self.response.history) <= 1:
                 return 1
@@ -342,7 +358,8 @@ class FeatureExtraction:
             else:
                 return -1
         except:
-             return -1
+            return -1
+
 
     # 20. StatusBarCust
     def StatusBarCust(self):
@@ -492,14 +509,16 @@ class FeatureExtraction:
 
 def process_url(url):
     try:
-        print("Intializing URL Processing")
+        print("Initializing URL Processing")
         extractor = FeatureExtraction(url)
-        return extractor.getFeaturesList()
+        return [extractor.getFeaturesList(), extractor.WebsiteForwarding(call=True)]
     except Exception as e:
         print(f"Error processing {url}: {e}")
-        return
+        return [[], -1]  # Returning a valid tuple instead of None
 
 # if __name__=="__main__":
+#     value = process_url("https://mail.google.com/mail/u/0/#inbox")
+#     print(value)
 #     data = pd.read_csv("PhiUSIIL_Phishing_URL_Dataset.csv")
 #     urls = data["URL"]
 #     feature_names = [

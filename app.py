@@ -22,7 +22,7 @@ def checkUrl():
     data_json = json.loads(data_str)
     model = joblib.load("classification_model.pkl")
     print("Model loaded.")
-    features = process_url(data_json)
+    [features, response] = process_url(data_json)
     print("URL Processed")
     print(features)
     feature_names = [
@@ -37,6 +37,7 @@ def checkUrl():
     print(input_df)
     prediction = model.predict(input_df)
     print(str(prediction[0]))
+    print("history", response)
     input_df["label"] = prediction[0]
     input_df["URL"] = data_json
     file_path = "model_prediction.csv"
@@ -47,7 +48,7 @@ def checkUrl():
         if not file_exists:
             writer.writerow(input_df.columns)
         writer.writerows(data)
-    return json.dumps({"prediction":str(prediction[0])})
+    return json.dumps({"prediction":str(prediction[0]), "redirections":str(response[-1]) if len(response)>0 else [] if type(response)==list else "-1"})
 
 @app.route('/updatePrediction', methods=["POST", "GET"])
 @cross_origin()
