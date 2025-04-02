@@ -48,7 +48,12 @@ def checkUrl():
         if not file_exists:
             writer.writerow(input_df.columns)
         writer.writerows(data)
-    return json.dumps({"prediction":str(prediction[0]), "redirections":str(response[-1]) if len(response)>0 else [] if type(response)==list else "-1"})
+    if isinstance(response, list) and len(response) > 0:
+        redirections = str(response[-1])
+    else:
+        redirections = "-1"
+
+    return json.dumps({"prediction": str(prediction[0]), "redirections": redirections})
 
 @app.route('/updatePrediction', methods=["POST", "GET"])
 @cross_origin()
